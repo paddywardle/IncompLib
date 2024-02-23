@@ -29,7 +29,6 @@ std::vector<std::vector<double>> FoamPolyMesh::faceCentres() const{
                         [&numPoints](double num){return num/numPoints;});
 
         faceCentres[i] = faceCentre;
-        break;
     }
 
     return faceCentres;
@@ -92,7 +91,7 @@ std::vector<std::vector<double>> FoamPolyMesh::cellCentres() const{
 
 }
 
-double FoamPolyMesh::tetrahedronVolume(const std::vector<double>& facePoint1, const std::vector<double>& facePoint2, const std::vector<double>& faceCentre, const std::vector<double>& cellCentre){
+double FoamPolyMesh::tetrahedronVolume(const std::vector<double>& facePoint1, const std::vector<double>& facePoint2, const std::vector<double>& faceCentre, const std::vector<double>& cellCentre) const{
 
     
     // calculate vectors between points
@@ -106,5 +105,56 @@ double FoamPolyMesh::tetrahedronVolume(const std::vector<double>& facePoint1, co
     // calculate scalar triple product
     double scalarTrip = LinAlgOps::dot<double>(AB, crossProd);
 
-    return std::fabs(scalarTrip) / 6.0;;
+    return std::fabs(scalarTrip) / 6.0;
+}
+
+std::vector<double> FoamPolyMesh::cellVolumes() const{
+
+    const int numCells = this->numCells();
+
+    std::vector<double> cellVolumes(numCells+1,0.0);
+
+    const std::vector<std::vector<double>>& faceCentres = this->meshFaceCentres;
+    const std::vector<std::vector<double>>& cellCentres = this->meshCellCentres;
+
+    const std::vector<int>& owners = this->getOwners();
+    const std::vector<int>& neighbours = this->getNeighbours();
+
+    const std::vector<std::vector<double>>& points = this->getPoints();
+    const std::vector<std::vector<int>>& faces = this->getFaces();
+
+    const int numOwners = owners.size();
+
+    // initialise here to avoid repeated initialisation
+    int jPlus1, facePoint, facePointPlus1;
+
+    for (int i=0; i<numOwners; i++){
+
+        const int& owner = owners[i];
+        const int& neighbour = neighbours[i];
+
+        const std::vector<int>& face = faces[i];
+        const std::vector<double>& ownerCentre = cellCentres[owner];
+        const std::vector<double>& neighbourCentre = cellCentres[neighbour];
+        const std::vector<double>& faceCentre = faceCentres[i];
+
+        const int numPointsInFace = face.size();
+
+        for (int j=0; j<numPointsInFace; j++){
+            
+            // if at the end of the vec use first element
+            jPlus1 = (j+1)%numPointsInFace;
+
+            facePoint = face[j];
+            facePointPlus1 = face[jPlus1];
+
+            cellVolumes[owner] += this->tetrahedronVolume(points[facePoint], points[facePointPlus1], faceCentre, ownerCentre);
+
+            if (neighbour != -1){
+                cellVolumes[neighbour] += this->tetrahedronVolume(points[facePoint], points[facePointPlus1], faceCentre, neighbourCentre);
+            }
+        }
+    }
+    return cellVolumes;
+
 }

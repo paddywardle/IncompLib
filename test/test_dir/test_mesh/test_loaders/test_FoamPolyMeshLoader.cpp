@@ -104,8 +104,6 @@ TEST(FoamPolyMeshLoaderTests, faceCentres){
 
     std::vector<double> faceCentre = faceCentres[0];
 
-    std::cout<<faceCentre[0]<<" "<<faceCentre[1]<<" "<<faceCentre[2]<<"\n";
-
     EXPECT_NEAR(faceCentre[0],1.7311045e-05, 0.0001);
     EXPECT_NEAR(faceCentre[1],-4.8750000e-04, 0.0001);
     EXPECT_NEAR(faceCentre[2],1.2500000e-04, 0.0001);
@@ -153,3 +151,41 @@ TEST(FoamPolyMeshLoaderTests, tetrahedronVolume){
 
 }
 
+TEST(FoamPolyMeshLoaderTests, tetrahedronVolume2){
+
+    // implement this test
+
+    FoamPolyMeshLoader meshLoader("../mesh_files/backward_step/");
+
+    meshLoader.loadMesh();
+
+    FoamPolyMesh mesh = meshLoader.createMesh();
+
+    std::vector<double> facePoint1 = {0.0,-0.000475,0.00025};
+    std::vector<double> facePoint2 = {1.7311045e-05,-4.7500000e-04,2.5000000e-04};
+    std::vector<double> faceCentre = {8.65552251e-06,-4.75000000e-04,1.25000000e-04};
+    std::vector<double> cellCentre = {8.65552251e-06,-4.87500000e-04,1.25000000e-04};
+
+    double tetVolume = mesh.tetrahedronVolume(facePoint1, facePoint2, faceCentre, cellCentre);
+
+    EXPECT_NEAR(tetVolume,4.508084640625008e-15, 1e-19);
+
+}
+
+TEST(FoamPolyMeshLoaderTests, cellVolume){
+
+    // implement this test
+
+    FoamPolyMeshLoader meshLoader("../mesh_files/backward_step/");
+
+    meshLoader.loadMesh();
+
+    FoamPolyMesh mesh = meshLoader.createMesh();
+
+    std::vector<double> cellVolumes = mesh.cellVolumes();
+
+    double cellVol = cellVolumes[0];
+
+    EXPECT_NEAR(cellVol,1.0819403137499982e-13, 1e-17);
+
+}
