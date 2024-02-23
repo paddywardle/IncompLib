@@ -111,6 +111,7 @@ double FoamPolyMesh::tetrahedronVolume(const std::vector<double>& facePoint1, co
 std::vector<double> FoamPolyMesh::cellVolumes() const{
 
     const int numCells = this->numCells();
+    const int numFaces = this->numFaces();
 
     std::vector<double> cellVolumes(numCells+1,0.0);
 
@@ -123,12 +124,10 @@ std::vector<double> FoamPolyMesh::cellVolumes() const{
     const std::vector<std::vector<double>>& points = this->getPoints();
     const std::vector<std::vector<int>>& faces = this->getFaces();
 
-    const int numOwners = owners.size();
-
     // initialise here to avoid repeated initialisation
     int jPlus1, facePoint, facePointPlus1;
 
-    for (int i=0; i<numOwners; i++){
+    for (int i=0; i<numFaces; i++){
 
         const int& owner = owners[i];
         const int& neighbour = neighbours[i];
@@ -155,6 +154,61 @@ std::vector<double> FoamPolyMesh::cellVolumes() const{
             }
         }
     }
+
     return cellVolumes;
+}
+
+std::vector<std::vector<double>> FoamPolyMesh::faceAreaVectors() const{
+
+    const int numFaces = this->numFaces();
+
+    std::vector<std::vector<double>> faceAreaVectors(numFaces,{0,0,0});
+
+    const std::vector<std::vector<double>>& faceCentres = this->meshFaceCentres;
+    const std::vector<std::vector<double>>& points = this->getPoints();
+    const std::vector<std::vector<int>>& faces = this->getFaces();
+    const std::vector<int>& owners = this->getOwners();
+    const std::vector<int>& neighbours = this->getNeighbours();
+
+    // initialise before loop to avoid repeated initialisation
+    int jPlus1, facePoint, facePointPlus1;
+    std::vector<double> AB, AC, ABCCross;
+
+    for (int i=0; i<numFaces; i++){
+
+        const int& owner = owners[i];
+        const int& neighbour = neighbours[i];
+
+        const std::vector<int>& face = faces[i];
+        const std::vector<double>& faceCentre = faceCentres[i];
+
+        const int numPointsInFace = face.size();
+
+        for (int j=0; j<numPointsInFace; j++){
+
+            // if at the end of the vec use first element
+            jPlus1 = (j+1)%numPointsInFace;
+
+            facePoint = face[j];
+            facePointPlus1 = face[jPlus1];
+
+            // work out area of triangle
+            AB = LinAlgOps::ABVec<double>(points[facePoint], faceCentre);
+            AC = LinAlgOps::ABVec<double>(points[facePointPlus1], faceCentre);
+
+            ABCCross = LinAlgOps::cross<double>(AB, AC);
+
+            // add into faceAreaVectors[i]
+            std::transform(faceAreaVectors[i].cbegin(), faceAreaVectors[i].cend(), ABCCross.cbegin(), faceAreaVectors[i].begin(), std::plus<>{});
+
+        }
+
+        // divide by 2.0 to calculate area
+        std::transform(faceAreaVectors[i].cbegin(), faceAreaVectors[i].cend(), faceAreaVectors[i].begin(),
+                        [](double num){return num/2.0;});
+
+    }
+
+    return faceAreaVectors;
 
 }

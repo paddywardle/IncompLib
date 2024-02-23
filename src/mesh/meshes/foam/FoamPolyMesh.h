@@ -28,9 +28,9 @@ class FoamPolyMesh : public FoamMesh<BasicBoundary>{
 
         std::vector<std::vector<double>> faceCentres() const override;
         std::vector<std::vector<double>> cellCentres() const override;
+        std::vector<std::vector<double>> faceAreaVectors() const override;
         std::vector<double> cellVolumes() const override;
         std::vector<double> boundaryFaces() const override{};
-        std::vector<double> faceAreaVectors() const override{};
 
         double tetrahedronVolume(const std::vector<double>& facePoint1, const std::vector<double>& facePoint2, const std::vector<double>& faceCentre, const std::vector<double>& cellCentre) const;
 

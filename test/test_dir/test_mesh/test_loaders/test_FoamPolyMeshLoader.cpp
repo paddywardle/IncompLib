@@ -189,3 +189,25 @@ TEST(FoamPolyMeshLoaderTests, cellVolume){
     EXPECT_NEAR(cellVol,1.0819403137499982e-13, 1e-17);
 
 }
+//6.25000000e-09 0.00000000e+00 0.00000000e+00]
+
+TEST(FoamPolyMeshLoaderTests, faceAreaVectors){
+
+    // implement this test
+
+    FoamPolyMeshLoader meshLoader("../mesh_files/backward_step/");
+
+    meshLoader.loadMesh();
+
+    FoamPolyMesh mesh = meshLoader.createMesh();
+
+    std::vector<std::vector<double>> faceAreaVectors = mesh.faceAreaVectors();
+
+    std::vector<double> faceAreaVector = faceAreaVectors[0];
+
+    EXPECT_NEAR(faceAreaVector[0],6.25000000e-09, 1e-12);
+    EXPECT_NEAR(faceAreaVector[1],0.0, 1e-12);
+    EXPECT_NEAR(faceAreaVector[2],0.0, 1e-12);
+
+
+}

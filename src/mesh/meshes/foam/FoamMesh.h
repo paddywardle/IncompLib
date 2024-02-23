@@ -27,9 +27,9 @@ class FoamMesh : public Mesh{
         // Virtual Functions
         virtual std::vector<std::vector<double>> faceCentres() const = 0;
         virtual std::vector<std::vector<double>> cellCentres() const = 0;
+        virtual std::vector<std::vector<double>> faceAreaVectors() const = 0;
         virtual std::vector<double> cellVolumes() const = 0;
         virtual std::vector<double> boundaryFaces() const = 0;
-        virtual std::vector<double> faceAreaVectors() const = 0;
         
         // Access functions - return const references
         const std::vector<std::vector<double>>& getPoints() const{
