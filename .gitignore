@@ -2,6 +2,7 @@ LinearSolversLibrary/
 build/
 test/build/
 mesh_files/
+InitialConds/
 
 # Prerequisites
 *.d

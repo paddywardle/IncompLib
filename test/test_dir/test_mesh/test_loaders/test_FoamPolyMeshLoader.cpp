@@ -209,5 +209,4 @@ TEST(FoamPolyMeshLoaderTests, faceAreaVectors){
     EXPECT_NEAR(faceAreaVector[1],0.0, 1e-12);
     EXPECT_NEAR(faceAreaVector[2],0.0, 1e-12);
 
-
 }
