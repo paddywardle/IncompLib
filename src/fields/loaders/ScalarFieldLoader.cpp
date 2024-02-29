@@ -41,5 +41,5 @@ void ScalarFieldLoader::loadField(){
     const int numCells = this->getMesh().numCells();
 
     this->internalField = std::vector<double>(numCells+1,internalFieldVal);
-    
+
 }

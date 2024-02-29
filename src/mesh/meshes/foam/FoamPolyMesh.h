@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <set>
 #include <cmath>
+#include <omp.h>
 
 #include "FoamMesh.h"
 #include "../../types/BasicBoundary.h"

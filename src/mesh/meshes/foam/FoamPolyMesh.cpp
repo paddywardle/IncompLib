@@ -8,6 +8,7 @@ std::vector<std::vector<double>> FoamPolyMesh::faceCentres() const{
     const std::vector<std::vector<int>>& faces = this->getFaces();
     const std::vector<std::vector<double>>& points = this->getPoints();
 
+    #pragma omp parallel for
     for (int i=0; i<numFaces; i++) {
 
         const std::vector<int>& facePoints = faces[i];
@@ -49,6 +50,7 @@ std::vector<std::vector<double>> FoamPolyMesh::cellCentres() const{
 
     std::vector<std::set<int>> cellPoints(numCells+1);
 
+    #pragma omp parallel for
     for (int i=0; i<numFaces; i++){
 
         const int& owner = owners[i];
@@ -59,13 +61,18 @@ std::vector<std::vector<double>> FoamPolyMesh::cellCentres() const{
 
         // insert into set to get unique points that make up cell
         for (int j=0; j<numPointsInCell; j++){
+
+            // do not want to get race conditions modifying these at the same time
             if (neighbour != -1){
+                #pragma omp critical // should this be atomic?
                 cellPoints[neighbour].insert(facePoints[j]);
             }
+            #pragma omp critical
             cellPoints[owner].insert(facePoints[j]);
         }
     }
 
+    #pragma omp parallel for
     for (int i=0; i<numCells; i++){
 
         std::vector<double> cellCentre(3,0.0); // centre is 3D
@@ -127,6 +134,7 @@ std::vector<double> FoamPolyMesh::cellVolumes() const{
     // initialise here to avoid repeated initialisation
     int jPlus1, facePoint, facePointPlus1;
 
+    #pragma omp parallel for
     for (int i=0; i<numFaces; i++){
 
         const int& owner = owners[i];
@@ -147,9 +155,11 @@ std::vector<double> FoamPolyMesh::cellVolumes() const{
             facePoint = face[j];
             facePointPlus1 = face[jPlus1];
 
+            #pragma omp atomic
             cellVolumes[owner] += this->tetrahedronVolume(points[facePoint], points[facePointPlus1], faceCentre, ownerCentre);
 
             if (neighbour != -1){
+                #pragma omp atomic
                 cellVolumes[neighbour] += this->tetrahedronVolume(points[facePoint], points[facePointPlus1], faceCentre, neighbourCentre);
             }
         }
@@ -174,6 +184,7 @@ std::vector<std::vector<double>> FoamPolyMesh::faceAreaVectors() const{
     int jPlus1, facePoint, facePointPlus1;
     std::vector<double> AB, AC, ABCCross;
 
+    #pragma omp parllel for
     for (int i=0; i<numFaces; i++){
 
         const int& owner = owners[i];
@@ -199,6 +210,8 @@ std::vector<std::vector<double>> FoamPolyMesh::faceAreaVectors() const{
             ABCCross = LinAlgOps::cross<double>(AB, AC);
 
             // add into faceAreaVectors[i]
+
+            #pragma omp critical
             std::transform(faceAreaVectors[i].cbegin(), faceAreaVectors[i].cend(), ABCCross.cbegin(), faceAreaVectors[i].begin(), std::plus<>{});
 
         }
