@@ -21,6 +21,10 @@ class FieldLoader{
 
         virtual void loadField() = 0;
 
+        virtual void loadInternalField() = 0;
+
+        virtual void loadBoundaryField() = 0;
+
         virtual fieldType createField() const = 0;
 
     private:
